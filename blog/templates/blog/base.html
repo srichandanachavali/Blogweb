@@ -1,0 +1,22 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}My Blog{% endblock %}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+    
+    <script>
+        // This script applies the saved theme instantly
+        (function() {
+            const savedTheme = localStorage.getItem('selectedTheme') || 'rose'; // Default theme
+            document.documentElement.className = 'theme-' + savedTheme;
+        })();
+    </script>
+</head>
+<body>
+    {% block content %}
+    {% endblock %}
+</body>
+</html>

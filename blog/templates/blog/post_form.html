@@ -1,0 +1,22 @@
+{% extends 'blog/base.html' %}
+{% block title %}New Post{% endblock %}
+
+{% block content %}
+<div class="container">
+    <main class="main-content">
+        <h1>Create a New Post</h1>
+
+        <section class="setting-section">
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <div class="form-buttons">
+                    <button type="submit" class="btn btn-primary">Publish Post</button>
+                </div>
+            </form>
+        </section>
+
+        <a href="{% url 'post_list' %}" class="home-link">&larr; Back to Blog Home</a>
+    </main>
+</div>
+{% endblock %}
