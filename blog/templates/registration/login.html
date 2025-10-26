@@ -1,0 +1,18 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}Log In{% endblock %}
+
+{% block content %}
+  <div class="post-article">
+    <h2>Log In</h2>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="comment-form input[type='submit']" style="background-color: #007bff;">Login</button>
+    </form>
+    <p style="margin-top: 15px;">
+      Don't have an account? 
+      <a href="{% url 'register' %}">Sign Up Here</a>
+    </p>
+  </div>
+{% endblock %}

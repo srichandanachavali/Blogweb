@@ -1,4 +1,3 @@
-# blog_project/urls.py
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
@@ -6,7 +5,11 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('accounts/', include('accounts.urls')), # This line MUST be present
+    # Add this line to include all of Django's auth views
+    # (login, logout, password reset, etc.)
+    path('accounts/', include('django.contrib.auth.urls')), 
+    
+    # Your blog urls
     path('', include('blog.urls')),
 ]
 

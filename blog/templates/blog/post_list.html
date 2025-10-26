@@ -1,78 +1,22 @@
 {% extends 'blog/base.html' %}
-{% block title %}My Blog{% endblock %}
 
 {% block content %}
-    <div class="homepage-content">
-        <header>
-            <h1>Blogweb-django</h1>
-            <nav class="header-nav">
-                {% if user.is_authenticated %}<a href="{% url 'logout' %}">Logout</a>{% else %}<a href="{% url 'login' %}">Login</a>{% endif %}
-            </nav>
-            <form class="search-form" method="get" action="{% url 'post_list' %}">
-                <input type="text" name="q" placeholder="Search for posts...">
-                <button type="submit">Search</button>
-            </form>
-        </header>
-
-        <div class="post-gallery">
-            {% for post in posts %}
-            <div class="post-card">
-                {% if post.image %}
-                    <img src="{{ post.image.url }}" alt="{{ post.title }}">
-                {% endif %}
-                <div class="post-card-content">
-                    <h2><a href="{% url 'post_detail' pk=post.pk %}">{{ post.title }}</a> {% if post.video %}🎬{% endif %}</h2>
-                    <p class="post-card-meta">By <a href="{% url 'user_posts' post.author.username %}">{{ post.author }}</a></p>
-                    <p>{{ post.body|truncatewords:20|linebreaks }}</p>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-
-        <div class="pagination">
-            {% if posts.has_other_pages %}
-            <span class="step-links">
-                {% if posts.has_previous %}<a href="?page=1&q={{ request.GET.q }}">&laquo; first</a><a href="?page={{ posts.previous_page_number }}&q={{ request.GET.q }}">previous</a>{% endif %}
-                <span class="current">Page {{ posts.number }} of {{ posts.paginator.num_pages }}.</span>
-                {% if posts.has_next %}<a href="?page={{ posts.next_page_number }}&q={{ request.GET.q }}">next</a><a href="?page={{ posts.paginator.num_pages }}&q={{ request.GET.q }}">last &raquo;</a>{% endif %}
-            </span>
-            {% endif %}
-        </div>
-
-        {% if user.is_authenticated %}
-            <button class="hamburger-menu" id="hamburger-btn" aria-label="Open Dashboard"><div class="bar"></div><div class="bar"></div><div class="bar"></div></button>
-            <div class="dashboard-panel" id="dashboard-panel">
-                <div class="dashboard-header">
-                    <img class="dashboard-pfp" src="{{ user.profile.image.url }}" alt="{{ user.username }}'s profile picture">
-                    <h2 class="dashboard-username">{{ user.username }}</h2>
-                    <button class="close-btn" id="close-btn" aria-label="Close Dashboard">&times;</button>
-                </div>
-                <div class="dashboard-body">
-                    <div class="accordion-header"><button class="accordion-button">My Posts</button><a href="{% url 'post_create' %}" class="add-post-btn" aria-label="Add new post">+</a></div>
-                    <div class="accordion-panel"><ul class="interaction-list">{% for post in my_posts %}<li><a href="{% url 'post_detail' pk=post.pk %}">{{ post.title }}</a></li>{% empty %}<li>You haven't posted anything yet.</li>{% endfor %}</ul></div>
-                    <button class="accordion-button">Posts You've Liked</button>
-                    <div class="accordion-panel"><ul class="interaction-list">{% for post in liked_posts %}<li><a href="{% url 'post_detail' pk=post.pk %}">{{ post.title }}</a></li>{% empty %}<li>You haven't liked any posts yet.</li>{% endfor %}</ul></div>
-                    <button class="accordion-button">Comments You've Made</button>
-                    <div class="accordion-panel"><ul class="interaction-list">{% for comment in user_comments %}<li><a href="{% url 'post_detail' pk=comment.post.pk %}">"{{ comment.body|truncatechars:30 }}"</a></li>{% empty %}<li>You haven't made any comments yet.</li>{% endfor %}</ul></div>
-                    <a href="{% url 'settings' %}" class="accordion-button" style="text-decoration: none; display: block; margin-top: 10px;">Settings</a>
-                </div>
-            </div>
-        {% endif %}
-
-        <script>
-            {% if user.is_authenticated %}
-                const hamburgerBtn = document.getElementById('hamburger-btn');
-                const dashboardPanel = document.getElementById('dashboard-panel');
-                const closeBtn = document.getElementById('close-btn');
-                hamburgerBtn.addEventListener('click', () => { dashboardPanel.classList.toggle('is-visible'); hamburgerBtn.classList.toggle('is-hidden'); });
-                closeBtn.addEventListener('click', () => { dashboardPanel.classList.remove('is-visible'); hamburgerBtn.classList.remove('is-hidden'); });
-                const acc = document.getElementsByClassName("accordion-button");
-                for (let i = 0; i < acc.length; i++) {
-                    if (acc[i].nextElementSibling && acc[i].nextElementSibling.classList.contains('accordion-panel')) {
-                        acc[i].addEventListener("click", function() { this.classList.toggle("active"); const panel = this.nextElementSibling; if (panel.style.maxHeight) { panel.style.maxHeight = null; } else { panel.style.maxHeight = panel.scrollHeight + "px"; } });
-                    }
-                }
-            {% endif %}
-        </script>
+<div class="post-grid">
+  {% for post in posts %}
+  <div class="post-card">
+    {% if post.image %}
+    <img src="{{ post.image.url }}" alt="{{ post.title }}" />
+    {% endif %}
+    <div class="post-card-content">
+      <h2>
+        <a href="{% url 'post_detail' pk=post.pk %}">{{ post.title }}</a>
+      </h2>
+      <p class="post-card-meta">
+        Published on {{ post.publish.date }} by {{ post.author }}
+      </p>
+      <p>{{ post.body|truncatewords:20|linebreaks }}</p>
     </div>
+  </div>
+  {% endfor %}
+</div>
 {% endblock %}

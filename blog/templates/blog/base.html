@@ -1,22 +1,45 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}My Blog{% endblock %}</title>
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
-    
-    <script>
-        // This script applies the saved theme instantly
-        (function() {
-            const savedTheme = localStorage.getItem('selectedTheme') || 'rose'; // Default theme
-            document.documentElement.className = 'theme-' + savedTheme;
-        })();
-    </script>
+    <style>
+        /* Add a little style for the user info */
+        .user-nav {
+            text-align: right;
+            padding: 10px 40px;
+            background: #fffaf0;
+        }
+    </style>
 </head>
 <body>
-    {% block content %}
-    {% endblock %}
+    
+    <nav class="user-nav">
+        {% if user.is_authenticated %}
+            Hi {{ user.username }}!
+            <a href="{% url 'logout' %}" style="margin-left: 15px;">Logout</a>
+        {% else %}
+            <a href="{% url 'login' %}">Login</a>
+            <a href="{% url 'register' %}" style="margin-left: 15px;">Register</a>
+        {% endif %}
+    </nav>
+
+    <header>
+        <h1><a href="{% url 'post_list' %}" style="text-decoration: none; color: #333;">Blogweb-django</a></h1>
+    </header>
+
+    {% if messages %}
+    <div style="max-width: 800px; margin: 10px auto; padding: 15px; background-color: #d4edda; color: #155724; border-radius: 8px;">
+        {% for message in messages %}
+            {{ message }}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <main class="content">
+        {% block content %}
+        {% endblock %}
+    </main>
 </body>
 </html>

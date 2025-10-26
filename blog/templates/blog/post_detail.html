@@ -1,83 +1,68 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ post.title }}</title>
-    <style>
-        body { font-family: sans-serif; background: linear-gradient(135deg, #FFDAC0, #FB9EC4, #8865FF); background-attachment: fixed; background-size: 200% 200%; animation: gradient-animation 10s ease infinite; margin: 0; padding: 20px; color: #333; box-sizing: border-box; }
-        @keyframes gradient-animation { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        .container { background-color: white; border-radius: 12px; box-shadow: 0 4px 25px rgba(0,0,0,0.15); width: 100%; max-width: 800px; padding: 40px; margin: 40px auto; box-sizing: border-box; }
-        .post-header h1 { font-size: 2.8em; margin-bottom: 10px; }
-        .post-meta { font-size: 0.9em; color: #666; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
-        .post-meta a { color: #8865FF; text-decoration: none; font-weight: bold; }
-        .post-tags { margin: 15px 0; }
-        .post-tags a { background-color: #eee; color: #555; padding: 5px 10px; border-radius: 15px; text-decoration: none; font-size: 0.8em; margin-right: 5px; font-weight: bold; }
-        .post-tags a:hover { background-color: #8865FF; color: white; }
-        .post-content img, .post-content video { max-width: 100%; height: auto; border-radius: 8px; margin-bottom: 20px; }
-        .post-content p { line-height: 1.7; font-size: 1.1em; }
-        .post-interactions { display: flex; align-items: center; gap: 15px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; }
-        .like-button { background: transparent; border: none; cursor: pointer; padding: 0; display: flex; align-items: center; }
-        .like-button svg { width: 28px; height: 28px; transition: all 0.2s ease-in-out; }
-        .like-button svg path { fill: transparent; stroke: #333; stroke-width: 1.5; }
-        .like-button.liked svg path { fill: #e54747; stroke: #e54747; }
-        .likes-count { font-weight: bold; font-size: 1.1em; }
-        .share-buttons { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-        .share-buttons svg { width: 24px; height: 24px; fill: #555; }
-        .comments-section { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; }
-        .comment { display: flex; align-items: flex-start; margin-bottom: 20px; padding: 15px; background-color: #f9f9f9; border-left: 4px solid #8865FF; border-radius: 8px; }
-        .comment-avatar { width: 48px; height: 48px; border-radius: 50%; margin-right: 15px; }
-        .comment-content { flex: 1; }
-        .comment-meta { margin: 0 0 5px 0; font-size: 0.9em; color: #555; }
-        .comment-meta strong a { color: #8865FF; text-decoration: none; font-weight: bold; }
-        .comment-meta span { color: #777; margin-left: 8px; }
-        .comment-form-container input, .comment-form-container textarea { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;}
-        .btn-primary { background-image: linear-gradient(to right, #FB9EC4 0%, #8865FF 100%); color: white; padding: 12px 20px; border-radius: 8px; border: none; font-size: 1em; font-weight: bold; cursor: pointer; }
-        .back-link { display: block; margin-top: 30px; text-decoration: none; color: #555; font-weight: bold; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="post-header">
-            <h1>{{ post.title }}</h1>
-            <p class="post-meta">Published on {{ post.publish.date }} by <a href="{% url 'user_posts' post.author.username %}">{{ post.author }}</a></p>
-        </div>
-        <div class="post-tags"><strong>Tags:</strong> {% for tag in post.tags.all %}<a href="{% url 'post_list_by_tag' tag.slug %}">{{ tag.name }}</a>{% endfor %}</div>
-        <div class="post-content">
-            {% if post.image %}<img src="{{ post.image.url }}" alt="{{ post.title }}">{% endif %}
-            {% if post.video %}<video width="100%" controls><source src="{{ post.video.url }}" type="video/mp4"></video>{% endif %}
-            <p>{{ post.body|linebreaks }}</p>
-        </div>
-        <div class="post-interactions">
-            <form action="{% url 'like_post' %}" method="post">
-                {% csrf_token %}<input type="hidden" name="post_id" value="{{ post.id }}">
-                <button type="submit" class="like-button {% if user in post.likes.all %}liked{% endif %}" aria-label="Like post">
-                    <svg viewBox="0 0 24 24"><path d="m11.645 20.91-1.106-1.037C5.21 15.361 2 12.278 2 8.513 2 5.424 4.424 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.576 3 22 5.424 22 8.513c0 3.766-3.21 6.848-8.54 11.36l-1.105 1.037Z" /></svg>
-                </button>
+{% extends 'blog/base.html' %}
+
+{% block title %}{{ post.title }}{% endblock %}
+
+{% block content %}
+<div class="comments-section">
+    <div class="comment-form">
+        {% if user.is_authenticated %}
+            <h2>Add a new comment</h2>
+            <p>You are commenting as {{ user.username }}.</p>
+            <form method="post" id="comment-form">
+                {{ form.as_p }}
+                {% csrf_token %}
+                <p><input type="submit" value="Add comment" /></p>
             </form>
-            <strong class="likes-count">{{ post.total_likes }} Like{{ post.total_likes|pluralize }}</strong>
-            <div class="share-buttons">
-                <strong>Share:</strong>
-                <a href="https://twitter.com/intent/tweet?text={{ post.title|urlencode }}&url={{ request.build_absolute_uri }}" target="_blank" aria-label="Share on Twitter"><svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
-                <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri }}" target="_blank" aria-label="Share on Facebook"><svg viewBox="0 0 24 24"><path d="M12 2.04C6.5 2.04 2 6.53 2 12.06c0 5.52 4.5 10.02 10 10.02s10-4.5 10-10.02C22 6.53 17.5 2.04 12 2.04zM16 11.37h-2.14v7.43h-3.3v-7.43H8.75V8.52h1.81V6.98c0-1.83.9-2.9 2.93-2.9h2.4v2.85h-1.63c-.92 0-1.02.44-1.02 1v1.51h2.64z"/></svg></a>
-                <a href="https://api.whatsapp.com/send?text={{ post.title|urlencode }}%20{{ request.build_absolute_uri }}" target="_blank" aria-label="Share on WhatsApp"><svg viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.38 1.25 4.82l-1.33 4.86 4.98-1.31c1.4.79 3 1.2 4.7 1.2h.01c5.46 0 9.91-4.45 9.91-9.91s-4.45-9.91-9.92-9.91zM17.18 15.45c-.21.12-.76.38-1.25.38-.49 0-.76-.12-1.04-.37-.28-.25-1.14-1.04-2.17-2.08-.81-.81-1.42-1.84-1.59-2.17-.17-.33 0-.52.14-.68.12-.14.28-.37.42-.51.12-.12.17-.21.25-.33.08-.14.04-.25-.02-.38-.06-.12-.55-1.31-.75-1.8-.2-.48-.4-.4-.55-.4h-.47c-.14,0-.38.04-.59.21-.21.17-.76.74-.76,1.79s.78,2.08.89,2.23c.11.14,1.54,2.4,3.71,3.29,2.17.89,2.17.59,2.56.56.39-.03,1.24-.5,1.42-1.01.17-.5.17-.92.12-1.01-.06-.08-.21-.13-.42-.25z"/></svg></a>
-            </div>
-        </div>
-        <div class="comments-section">
-            <h2>{{ comments.count }} Comment{{ comments.count|pluralize }}</h2>
-            {% for comment in comments %}
-            <div class="comment">
-                {% if comment.user.profile.image %}<img src="{{ comment.user.profile.image.url }}" alt="avatar" class="comment-avatar">{% else %}<img src="https://i.pravatar.cc/48?u={{ comment.email }}" alt="avatar" class="comment-avatar">{% endif %}
-                <div class="comment-content">
-                    <p class="comment-meta"><strong>{% if comment.user %}<a href="{% url 'user_posts' comment.user.username %}">{{ comment.user.username }}</a>{% else %}{{ comment.name }}{% endif %}</strong><span> on {{ comment.created.date }}</span></p>
-                    <p class="comment-body">{{ comment.body|linebreaks }}</p>
-                </div>
-            </div>
-            {% empty %} <p>There are no comments yet.</p> {% endfor %}
-            <div class="comment-form-container"><h3>Leave a Comment</h3><form method="post">{% csrf_token %}{{ comment_form.as_p }}<button type="submit" class="btn-primary">Submit</button></form></div>
-        </div>
-        <a class="back-link" href="{% url 'post_list' %}">&larr; Back to All Posts</a>
+        {% else %}
+            <h2>Add a new comment</h2>
+            <p>You must be <a href="{% url 'login' %}?next={{ request.path }}">logged in</a> to post a comment.</p>
+            {% endif %}
+        <div id="form-messages" style="margin-top: 10px;"></div>
     </div>
-</body>
-</html>
+</div>
+
+<a href="{% url 'post_list' %}">Back to post list</a>
+
+{% if user.is_authenticated %}
+<script>
+    document.getElementById('comment-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const form = this;
+        const formData = new FormData(form);
+        const url = form.action;
+
+        // The name and email are no longer in the form, but that's okay!
+        // The view handles adding them for authenticated users.
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const newComment = document.createElement('div');
+                newComment.classList.add('comment');
+                newComment.innerHTML = `
+                  <p class="comment-meta">
+                    Comment by <strong>${data.name}</strong> on ${data.created}
+                  </p>
+                  <div class="comment-body">${data.body.replace(/\n/g, '<br>')}</div>
+                `;
+                document.getElementById('comment-list').appendChild(newComment);
+                const noComments = document.getElementById('no-comments');
+                if (noComments) noComments.remove();
+                form.reset();
+                document.getElementById('form-messages').innerHTML = '<p style="color: green;">Comment added!</p>';
+            } else {
+                document.getElementById('form-messages').innerHTML = '<p style="color: red;">Something went wrong.</p>';
+            }
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}
