@@ -1,8 +1,0 @@
-﻿__pycache__/
-*.pyc
-.env
-venv/
-db.sqlite3*
-/media/
-/static/
-.vscode/
