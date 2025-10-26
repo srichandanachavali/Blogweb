@@ -1,22 +1,130 @@
-{% extends 'blog/base.html' %}
-
-{% block content %}
-<div class="post-grid">
-  {% for post in posts %}
-  <div class="post-card">
-    {% if post.image %}
-    <img src="{{ post.image.url }}" alt="{{ post.title }}" />
-    {% endif %}
-    <div class="post-card-content">
-      <h2>
-        <a href="{% url 'post_detail' pk=post.pk %}">{{ post.title }}</a>
-      </h2>
-      <p class="post-card-meta">
-        Published on {{ post.publish.date }} by {{ post.author }}
-      </p>
-      <p>{{ post.body|truncatewords:20|linebreaks }}</p>
+{% extends 'blog/base.html' %} {% block title %}Home • Blogweb{% endblock %} {%
+block content %}
+<section class="feed">
+  {% if user.is_authenticated %}
+  <article class="story-card">
+    <div class="story-avatar">
+      {% if user_profile and user_profile.image %}
+      <img src="{{ user_profile.image.url }}" alt="{{ user.username }}" />
+      {% else %}
+      <span>{{ user.username|first|upper }}</span>
+      {% endif %}
     </div>
-  </div>
+    <div>
+      <p>Share something inspiring today.</p>
+      <a class="button" href="{% url 'post_create' %}">Create a post</a>
+    </div>
+  </article>
+  {% endif %} {% for post in posts %}
+  <article class="post-card">
+    <header class="post-card__header">
+      <div class="post-card__author">
+        {% if post.author_profile and post.author_profile.image %}
+        <img
+          src="{{ post.author_profile.image.url }}"
+          alt="{{ post.author.username }}"
+        />
+        {% else %}
+        <span>{{ post.author.username|first|upper }}</span>
+        {% endif %}
+        <div>
+          <h2>
+            <a href="{% url 'post_detail' pk=post.pk %}">{{ post.title }}</a>
+          </h2>
+          <p>by {{ post.author.username }} · {{ post.publish|date:"M d" }}</p>
+        </div>
+      </div>
+      <div class="post-card__tags">
+        {% for tag in post.tags.all %}
+        <span>#{{ tag }}</span>
+        {% empty %}
+        <span class="muted">No tags</span>
+        {% endfor %}
+      </div>
+    </header>
+
+    {% if post.image %}
+    <div class="post-card__media">
+      <img src="{{ post.image.url }}" alt="{{ post.title }}" />
+    </div>
+    {% elif post.video %}
+    <div class="post-card__media">
+      <video controls preload="metadata">
+        <source src="{{ post.video.url }}" />
+      </video>
+    </div>
+    {% endif %}
+    <div class="post-card__body">
+      <p>{{ post.body|linebreaksbr|truncatechars:220 }}</p>
+    </div>
+    <footer class="post-card__footer">
+      <div class="post-actions">
+        <form action="{% url 'post_toggle_like' pk=post.pk %}" method="post">
+          {% csrf_token %}
+          <input
+            type="hidden"
+            name="next"
+            value="{{ request.get_full_path }}"
+          />
+          <button
+            type="submit"
+            class="icon-button {% if post.user_liked %}active{% endif %}"
+          >
+            ❤️ <span>{{ post.total_likes }}</span>
+          </button>
+        </form>
+        <form action="{% url 'post_toggle_save' pk=post.pk %}" method="post">
+          {% csrf_token %}
+          <input
+            type="hidden"
+            name="next"
+            value="{{ request.get_full_path }}"
+          />
+          <button
+            type="submit"
+            class="icon-button {% if post.user_saved %}active{% endif %}"
+          >
+            🔖 <span>{{ post.total_saves }}</span>
+          </button>
+        </form>
+      </div>
+      <div class="post-comments">
+        {% with preview=post.comments.all|slice:":2" %} {% for comment in
+        preview %}
+        <p>
+          <strong>
+            {% if comment.user %}{{ comment.user.username }}{% else %}{{
+            comment.name|default:'Anonymous' }}{% endif %}:
+          </strong>
+          {{ comment.body|truncatechars:80 }}
+        </p>
+        {% empty %}
+        <p class="muted">Be the first to comment.</p>
+        {% endfor %} {% endwith %}
+      </div>
+      {% if user.is_authenticated %}
+      <form
+        class="comment-form"
+        action="{% url 'post_add_comment' pk=post.pk %}"
+        method="post"
+      >
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+        <textarea
+          name="body"
+          rows="2"
+          class="comment-input"
+          placeholder="Add a comment…"
+        ></textarea>
+        <button type="submit" class="button ghost">Post</button>
+      </form>
+      {% else %}
+      <p class="muted">Log in to join the conversation.</p>
+      {% endif %}
+    </footer>
+  </article>
+  {% empty %}
+  <p class="muted">No posts yet. Start the conversation!</p>
   {% endfor %}
-</div>
+</section>
 {% endblock %}

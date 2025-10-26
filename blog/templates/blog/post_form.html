@@ -1,22 +1,17 @@
 {% extends 'blog/base.html' %}
-{% block title %}New Post{% endblock %}
-
+{% block title %}Create post • Blogweb{% endblock %}
 {% block content %}
-<div class="container">
-    <main class="main-content">
-        <h1>Create a New Post</h1>
-
-        <section class="setting-section">
-            <form method="POST" enctype="multipart/form-data">
-                {% csrf_token %}
-                {{ form.as_p }}
-                <div class="form-buttons">
-                    <button type="submit" class="btn btn-primary">Publish Post</button>
-                </div>
-            </form>
-        </section>
-
-        <a href="{% url 'post_list' %}" class="home-link">&larr; Back to Blog Home</a>
-    </main>
-</div>
-{% endblock %}
+<section class="form-card">
+  <h1>Create a new post</h1>
+  <form method="post" enctype="multipart/form-data" class="stack">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div class="form-group">{{ form.title.label_tag }}{{ form.title }}</div>
+    <div class="form-group">{{ form.body.label_tag }}{{ form.body }}</div>
+    <div class="form-group">{{ form.tags.label_tag }}{{ form.tags }}</div>
+    <div class="form-group file-input">{{ form.image.label_tag }}{{ form.image }}</div>
+    <div class="form-group file-input">{{ form.video.label_tag }}{{ form.video }}</div>
+    <button type="submit" class="button">Publish</button>
+  </form>
+</section>
+{% endblock %}}

@@ -1,0 +1,44 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}Settings • Blogweb{% endblock %}
+
+{% block content %}
+<section class="form-card">
+  <h1>Profile settings</h1>
+  <form method="post" enctype="multipart/form-data" class="stack">
+    {% csrf_token %}
+    <input type="hidden" name="update_profile" value="1" />
+    <div class="form-group">
+      {{ u_form.username.label_tag }}
+      {{ u_form.username }}
+      {% if u_form.username.errors %}<p class="error">{{ u_form.username.errors|striptags }}</p>{% endif %}
+    </div>
+    <div class="form-group">
+      {{ u_form.email.label_tag }}
+      {{ u_form.email }}
+      {% if u_form.email.errors %}<p class="error">{{ u_form.email.errors|striptags }}</p>{% endif %}
+    </div>
+    <div class="form-group file-input">
+      {{ profile_form.image.label_tag }}
+      {{ profile_form.image }}
+    </div>
+    <button type="submit" class="button">Save changes</button>
+  </form>
+</section>
+
+<section class="form-card">
+  <h2>Change password</h2>
+  <form method="post" class="stack">
+    {% csrf_token %}
+    <input type="hidden" name="change_password" value="1" />
+    {% for field in p_form %}
+    <div class="form-group">
+      {{ field.label_tag }}
+      {{ field }}
+      {% if field.errors %}<p class="error">{{ field.errors|striptags }}</p>{% endif %}
+    </div>
+    {% endfor %}
+    <button type="submit" class="button ghost">Update password</button>
+  </form>
+</section>
+{% endblock %}

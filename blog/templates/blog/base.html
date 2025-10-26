@@ -1,45 +1,138 @@
 {% load static %}
 <!DOCTYPE html>
-<html>
-<head>
-    <title>{% block title %}My Blog{% endblock %}</title>
-    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+<html lang="en" data-theme="{{ active_theme|default:'light' }}">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Blogweb{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'blog/css/style.css' %}" />
     <style>
-        /* Add a little style for the user info */
-        .user-nav {
-            text-align: right;
-            padding: 10px 40px;
-            background: #fffaf0;
+      :root {
+        --accent-color: {
+           {
+            accent_color|default: "#ff4f70";
+          }
         }
+      }
     </style>
-</head>
-<body>
-    
-    <nav class="user-nav">
-        {% if user.is_authenticated %}
-            Hi {{ user.username }}!
-            <a href="{% url 'logout' %}" style="margin-left: 15px;">Logout</a>
-        {% else %}
-            <a href="{% url 'login' %}">Login</a>
-            <a href="{% url 'register' %}" style="margin-left: 15px;">Register</a>
-        {% endif %}
-    </nav>
-
-    <header>
-        <h1><a href="{% url 'post_list' %}" style="text-decoration: none; color: #333;">Blogweb-django</a></h1>
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="brand">
+        <a href="{% url 'post_list' %}">Blogweb</a>
+      </div>
+      <div class="header-controls">
+        <form
+          method="post"
+          action="{% url 'set_theme' %}"
+          class="theme-switcher"
+        >
+          {% csrf_token %}
+          <input
+            type="hidden"
+            name="next"
+            value="{{ request.get_full_path }}"
+          />
+          <button
+            name="theme"
+            value="light"
+            type="submit"
+            class="theme-btn"
+            aria-label="Use light theme"
+          >
+            ☀️
+          </button>
+          <button
+            name="theme"
+            value="dark"
+            type="submit"
+            class="theme-btn"
+            aria-label="Use dark theme"
+          >
+            🌙
+          </button>
+          <label class="theme-custom">
+            <input
+              type="color"
+              name="accent_color"
+              value="{{ accent_color|default:'#ff4f70' }}"
+              aria-label="Pick accent color"
+            />
+            <button
+              name="theme"
+              value="custom"
+              type="submit"
+              class="theme-btn"
+              aria-label="Apply custom color"
+            >
+              🎨
+            </button>
+          </label>
+        </form>
+        <div class="auth-links">
+          {% if user.is_authenticated %}
+          <a class="avatar" href="{% url 'profile' %}">
+            {% if user_profile and user_profile.image %}
+            <img
+              src="{{ user_profile.image.url }}"
+              alt="{{ user.username }} avatar"
+            />
+            {% else %}
+            <span>{{ user.username|first|upper }}</span>
+            {% endif %}
+          </a>
+          <a class="button ghost" href="{% url 'post_create' %}">Create</a>
+          <a class="button" href="{% url 'logout' %}">Logout</a>
+          {% else %}
+          <a class="button ghost" href="{% url 'login' %}">Login</a>
+          <a class="button" href="{% url 'register' %}">Sign Up</a>
+          {% endif %}
+        </div>
+      </div>
     </header>
 
     {% if messages %}
-    <div style="max-width: 800px; margin: 10px auto; padding: 15px; background-color: #d4edda; color: #155724; border-radius: 8px;">
-        {% for message in messages %}
-            {{ message }}
-        {% endfor %}
+    <div class="flash-messages">
+      {% for message in messages %}
+      <div class="flash {{ message.tags }}">{{ message }}</div>
+      {% endfor %}
     </div>
     {% endif %}
+    <main class="layout">{% block content %}{% endblock %}</main>
+    <footer class="app-footer">
+      <p>Built with ❤️ for storytellers.</p>
+    </footer>
 
-    <main class="content">
-        {% block content %}
-        {% endblock %}
-    </main>
-</body>
+    <script>
+      const savedTheme = window.localStorage.getItem("blogweb-theme");
+      const savedAccent = window.localStorage.getItem("blogweb-accent");
+      const root = document.documentElement;
+      if (savedTheme && savedTheme !== document.documentElement.dataset.theme) {
+        document.documentElement.dataset.theme = savedTheme;
+      }
+      if (savedAccent) {
+        root.style.setProperty("--accent-color", savedAccent);
+      }
+      document
+        .querySelectorAll('.theme-switcher button[name="theme"]')
+        .forEach((button) => {
+          button.addEventListener("click", () => {
+            window.localStorage.setItem("blogweb-theme", button.value);
+            setTimeout(() => {
+              document.documentElement.dataset.theme = button.value;
+            }, 0);
+          });
+        });
+      const colorInput = document.querySelector(
+        '.theme-custom input[type="color"]'
+      );
+      if (colorInput) {
+        colorInput.addEventListener("input", (event) => {
+          const color = event.target.value;
+          root.style.setProperty("--accent-color", color);
+          window.localStorage.setItem("blogweb-accent", color);
+        });
+      }
+    </script>
+  </body>
 </html>

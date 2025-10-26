@@ -1,0 +1,75 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}{{ user.username }} • Profile{% endblock %}
+
+{% block content %}
+<section class="profile-header">
+  <div class="profile-avatar">
+    {% if profile.image %}
+    <img src="{{ profile.image.url }}" alt="{{ user.username }}" />
+    {% else %}
+    <span>{{ user.username|first|upper }}</span>
+    {% endif %}
+  </div>
+  <div>
+    <h1>{{ user.username }}</h1>
+    <p class="muted">{{ user.email }}</p>
+    <a class="button ghost" href="{% url 'settings' %}">Edit profile</a>
+  </div>
+</section>
+
+<section class="profile-grid">
+  <div>
+    <h2>Your posts</h2>
+    <div class="profile-list">
+      {% for post in my_posts %}
+      <a class="profile-item" href="{% url 'post_detail' pk=post.pk %}">
+        <span>{{ post.title }}</span>
+        <small>{{ post.publish|date:"M d, Y" }}</small>
+      </a>
+      {% empty %}
+      <p class="muted">You haven't posted yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+  <div>
+    <h2>Saved posts</h2>
+    <div class="profile-list">
+      {% for post in saved_posts %}
+      <a class="profile-item" href="{% url 'post_detail' pk=post.pk %}">
+        <span>{{ post.title }}</span>
+        <small>by {{ post.author.username }}</small>
+      </a>
+      {% empty %}
+      <p class="muted">Save posts to read them later.</p>
+      {% endfor %}
+    </div>
+  </div>
+  <div>
+    <h2>Liked posts</h2>
+    <div class="profile-list">
+      {% for post in liked_posts %}
+      <a class="profile-item" href="{% url 'post_detail' pk=post.pk %}">
+        <span>{{ post.title }}</span>
+        <small>by {{ post.author.username }}</small>
+      </a>
+      {% empty %}
+      <p class="muted">You haven't liked any posts yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+  <div>
+    <h2>Recent comments</h2>
+    <div class="profile-list">
+      {% for comment in user_comments %}
+      <a class="profile-item" href="{% url 'post_detail' pk=comment.post.pk %}">
+        <span>{{ comment.post.title }}</span>
+        <small>{{ comment.body|truncatechars:60 }}</small>
+      </a>
+      {% empty %}
+      <p class="muted">No comments yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,68 +1,84 @@
 {% extends 'blog/base.html' %}
-
-{% block title %}{{ post.title }}{% endblock %}
+{% block title %}{{ post.title }} • Blogweb{% endblock %}
 
 {% block content %}
-<div class="comments-section">
-    <div class="comment-form">
-        {% if user.is_authenticated %}
-            <h2>Add a new comment</h2>
-            <p>You are commenting as {{ user.username }}.</p>
-            <form method="post" id="comment-form">
-                {{ form.as_p }}
-                {% csrf_token %}
-                <p><input type="submit" value="Add comment" /></p>
-            </form>
-        {% else %}
-            <h2>Add a new comment</h2>
-            <p>You must be <a href="{% url 'login' %}?next={{ request.path }}">logged in</a> to post a comment.</p>
-            {% endif %}
-        <div id="form-messages" style="margin-top: 10px;"></div>
-    </div>
+<article class="post-card post-card--detail">
+  <header class="post-card__header">
+    < class="post-card__author">
+      {% if post.author_profile and post.author_profile.image %}
+      <img src="{{ post.author_profile.image.url }}" alt="{{ post.author.username }}" />
+      {% else %}
+      <span>{{ post.author.username|first|upper }}</span>
+      {% endif %}
+      <div>
+        <h1>{{ post.title }}</h1>
+        <p>by {{ post.author.username }} · {{ post.publish|date:"F j, Y" }}</p>
+      </div>
 </div>
+    <div class="post-card__tags">
+      {% for tag in post.tags.all %}
+      <span>#{{ tag }}</span>
+      {% empty %}
+      <span class="muted">No tags yet</span>
+      {% endfor %}
+    </div>
+  </header>
 
-<a href="{% url 'post_list' %}">Back to post list</a>
-
-{% if user.is_authenticated %}
-<script>
-    document.getElementById('comment-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const form = this;
-        const formData = new FormData(form);
-        const url = form.action;
-
-        // The name and email are no longer in the form, but that's okay!
-        // The view handles adding them for authenticated users.
-
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const newComment = document.createElement('div');
-                newComment.classList.add('comment');
-                newComment.innerHTML = `
-                  <p class="comment-meta">
-                    Comment by <strong>${data.name}</strong> on ${data.created}
-                  </p>
-                  <div class="comment-body">${data.body.replace(/\n/g, '<br>')}</div>
-                `;
-                document.getElementById('comment-list').appendChild(newComment);
-                const noComments = document.getElementById('no-comments');
-                if (noComments) noComments.remove();
-                form.reset();
-                document.getElementById('form-messages').innerHTML = '<p style="color: green;">Comment added!</p>';
-            } else {
-                document.getElementById('form-messages').innerHTML = '<p style="color: red;">Something went wrong.</p>';
-            }
-        });
-    });
-</script>
-{% endif %}
+  {% if post.image %}
+  <div class="post-card__media">
+    <img src="{{ post.image.url }}" alt="{{ post.title }}" />
+  </div>
+  {% elif post.video %}
+  <div class="post-card__media">
+    <video controls preload="metadata">
+      <source src="{{ post.video.url }}" />
+    </video>
+  </div>
+  {% endif %}
+  <div class="post-card__body">
+    {{ post.body|linebreaks }}
+  </div>
+  <footer class="post-card__footer">
+    <div class="post-actions">
+      <form action="{% url 'post_toggle_like' pk=post.pk %}" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+        <button type="submit" class="icon-button {% if post.user_liked %}active{% endif %}">
+          ❤️ <span>{{ post.total_likes }}</span>
+        </button>
+      </form>
+      <form action="{% url 'post_toggle_save' pk=post.pk %}" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+        <button type="submit" class="icon-button {% if post.user_saved %}active{% endif %}">
+          🔖 <span>{{ post.total_saves }}</span>
+        </button>
+      </form>
+    </div>
+    <section class="comments">
+      <h2>Comments</h2>
+      {% for comment in comments %}
+      <div class="comment">
+        <div class="comment__meta">
+          <strong>{% if comment.user %}{{ comment.user.username }}{% else %}{{ comment.name|default:'Anonymous' }}{% endif %}</strong>
+          <span>{{ comment.created|timesince }} ago</span>
+        </div>
+        <p>{{ comment.body|linebreaksbr }}</p>
+      </div>
+      {% empty %}
+      <p class="muted">No comments yet. Start the discussion!</p>
+      {% endfor %}     
+      {% if user.is_authenticated %}
+      <form class="comment-form" method="post" action="{% url 'post_add_comment' pk=post.pk %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+        <textarea name="body" rows="3" class="comment-input" placeholder="Share your thoughts…"></textarea>
+        <button type="submit" class="button">Post comment</button>
+      </form>
+      {% else %}
+      <p class="muted">Log in to add a comment.</p>
+      {% endif %}
+    </section>
+  </footer>
+</article>
 {% endblock %}
