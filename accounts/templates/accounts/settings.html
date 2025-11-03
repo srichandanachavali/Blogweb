@@ -26,6 +26,36 @@
   </form>
 </section>
 
+<section class="theme-card">
+  <h2>Appearance</h2>
+  <form method="post" action="{% url 'set_theme' %}" class="theme-settings">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+    <div class="theme-options">
+      <label class="theme-option {% if active_theme == 'light' %}is-active{% endif %}">
+        <input type="radio" name="theme" value="light" {% if active_theme == 'light' %}checked{% endif %} />
+        <strong>Light</strong>
+        <span>Bright and minimal look</span>
+      </label>
+      <label class="theme-option {% if active_theme == 'dark' %}is-active{% endif %}">
+        <input type="radio" name="theme" value="dark" {% if active_theme == 'dark' %}checked{% endif %} />
+        <strong>Dark</strong>
+        <span>Low-light friendly palette</span>
+      </label>
+      <label class="theme-option {% if active_theme == 'custom' %}is-active{% endif %}">
+        <input type="radio" name="theme" value="custom" {% if active_theme == 'custom' %}checked{% endif %} />
+        <strong>Custom</strong>
+        <span>Use your accent color</span>
+      </label>
+    </div>
+    <div class="accent-picker">
+      <label for="accent-color">Accent color</label>
+      <input type="color" id="accent-color" name="accent_color" value="{{ accent_color|default:'#ff4f70' }}" />
+    </div>
+    <button type="submit" class="button ghost">Save appearance</button>
+  </form>
+</section>
+
 <section class="form-card">
   <h2>Change password</h2>
   <form method="post" class="stack">

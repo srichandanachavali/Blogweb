@@ -1,0 +1,160 @@
+{% extends 'blog/base.html' %} {% block title %}{{ story_user.username }}'s
+Story{% endblock %} {% block content %}
+<style>
+  /* This hides the scrollbar on the main page */
+  body {
+    overflow: hidden;
+  }
+  .story-viewer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .story-viewer-content {
+    max-width: 400px;
+    width: 90%;
+    max-height: 90vh;
+    background: #111;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .story-close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    color: white;
+    font-size: 3rem;
+    text-decoration: none;
+    font-weight: 100;
+    z-index: 1010;
+  }
+
+  /* --- THIS IS THE KEY PART --- */
+  /* Hide all stories by default */
+  .story-item {
+    display: none;
+  }
+  /* Show only the active one */
+  .story-item.active {
+    display: block;
+  }
+  /* --- END KEY PART --- */
+
+  .story-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 15px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.7),
+      rgba(0, 0, 0, 0)
+    );
+    z-index: 1005;
+  }
+  .story-header img {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  .story-header span {
+    color: white;
+    font-weight: 600;
+  }
+  .story-image img {
+    width: 100%;
+    height: 100%;
+    max-height: 85vh;
+    object-fit: contain; /* 'contain' is better than 'cover' */
+    display: block;
+  }
+</style>
+
+<div class="story-viewer" id="story-viewer-modal">
+  <a href="{% url 'post_list' %}" class="story-close">&times;</a>
+
+  <div class="story-viewer-content">
+    {% for story in stories %}
+    <div class="story-item">
+      <div class="story-header">
+        {% if story.author.profile and story.author.profile.image %}
+        <img
+          src="{{ story.author.profile.image.url }}"
+          alt="{{ story.author.username }}"
+        />
+        {% endif %}
+        <span>{{ story.author.username }}</span>
+      </div>
+      <div class="story-image">
+        <img
+          src="{{ story.image.url }}"
+          alt="Story by {{ story.author.username }}"
+        />
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+  // Wait for the page to be fully loaded
+  document.addEventListener("DOMContentLoaded", (event) => {
+    // Get all the story items we looped through
+    const stories = document.querySelectorAll(".story-item");
+    const modal = document.getElementById("story-viewer-modal");
+
+    let currentStoryIndex = 0;
+    let storyTimer;
+
+    function closeStoryViewer() {
+      // Go back to the homepage
+      window.location.href = "{% url 'post_list' %}";
+    }
+
+    function showStory(index) {
+      // 1. Hide all stories
+      stories.forEach((story) => {
+        story.classList.remove("active");
+      });
+
+      // 2. Check if we're out of stories
+      if (index >= stories.length) {
+        closeStoryViewer(); // All done, go back home
+        return;
+      }
+
+      // 3. Show the new story
+      stories[index].classList.add("active");
+      currentStoryIndex = index;
+
+      // 4. Set a timer to advance to the next story (5 seconds)
+      // Clear any old timer first
+      clearTimeout(storyTimer);
+      storyTimer = setTimeout(() => {
+        showStory(currentStoryIndex + 1);
+      }, 5000); // 5000 milliseconds = 5 seconds
+    }
+
+    // Start the show!
+    if (stories.length > 0) {
+      showStory(0);
+    } else {
+      // If for some reason we got here with no stories, just leave
+      closeStoryViewer();
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}Add a Story{% endblock %}
+
+{% block content %}
+<div class="form-wrapper" style="max-width: 500px; margin: 2rem auto; padding: 2rem; background: var(--card-bg); border-radius: 12px;">
+  <h2>Upload a Story</h2>
+  <p class="muted">Your story will be visible for 24 hours.</p>
+  
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="button" style="margin-top: 1rem;">Upload</button>
+  </form>
+</div>
+{% endblock %}

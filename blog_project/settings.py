@@ -83,6 +83,10 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# --- THIS IS THE NEW LINE YOU WERE MISSING ---
+# This tells Django where to find your *source* static files
+STATICFILES_DIRS = [BASE_DIR / 'static']
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 

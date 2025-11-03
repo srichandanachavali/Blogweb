@@ -6,71 +6,113 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% block title %}Blogweb{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'blog/css/style.css' %}" />
+    
     <style>
       :root {
-        --accent-color: {
-           {
-            accent_color|default: "#ff4f70";
-          }
-        }
+        --accent-color: {{ accent_color|default:"#ff4f70" }};
+      }
+    </style>
+    <style>
+      body::before {
+        content: ""; /* Required for a pseudo-element */
+        position: fixed; /* Stays in place when you scroll */
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        
+        /* This path is correct based on your screenshot */
+        background-image: url("{% static 'images/cinema_bg.png' %}");
+        
+        background-size: cover;
+        background-position: center center;
+        
+        opacity: 0.05; /* Try 0.05, 0.1, or 0.15 */
+        
+        z-index: -1;
+      }
+    </style>
+    <style>
+      .brand-container {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 0.5rem 0.5rem;
+      }
+
+      .brand-link {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        gap: 10px;
+      }
+
+      .brand-logo {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+      }
+
+      .brand-name {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+        font-weight: 700;
+        font-size: 1.75rem;
+        color: var(--text-color, #222);
+        letter-spacing: -0.5px;
+      }
+
+      .app-header {
+        justify-content: space-between;
+      }
+
+      .settings-link-simple {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        background: none;
+        border: none;
+        padding: 0 0.5rem;
+        font-size: 1.5rem;
+        color: var(--text-color-muted, #888);
+        transition: color 0.2s ease;
+      }
+      .settings-link-simple:hover {
+        color: var(--text-color, #222);
       }
     </style>
   </head>
   <body>
     <header class="app-header">
-      <div class="brand">
-        <a href="{% url 'post_list' %}">Blogweb</a>
-      </div>
-      <div class="header-controls">
-        <form
-          method="post"
-          action="{% url 'set_theme' %}"
-          class="theme-switcher"
+      <div class="brand-container">
+        <a
+          class="brand-link"
+          href="{% url 'post_list' %}"
+          aria-label="Go to homepage"
         >
-          {% csrf_token %}
-          <input
-            type="hidden"
-            name="next"
-            value="{{ request.get_full_path }}"
+          <img
+            src="{% static 'images/cinesyndicate_logo.png' %}"
+            alt="CineSyndicate Logo"
+            class="brand-logo"
           />
-          <button
-            name="theme"
-            value="light"
-            type="submit"
-            class="theme-btn"
-            aria-label="Use light theme"
-          >
-            ☀️
-          </button>
-          <button
-            name="theme"
-            value="dark"
-            type="submit"
-            class="theme-btn"
-            aria-label="Use dark theme"
-          >
-            🌙
-          </button>
-          <label class="theme-custom">
-            <input
-              type="color"
-              name="accent_color"
-              value="{{ accent_color|default:'#ff4f70' }}"
-              aria-label="Pick accent color"
-            />
-            <button
-              name="theme"
-              value="custom"
-              type="submit"
-              class="theme-btn"
-              aria-label="Apply custom color"
-            >
-              🎨
-            </button>
-          </label>
-        </form>
+          <span class="brand-name">CineSyndicate</span>
+        </a>
+      </div>
+
+      <div class="header-controls">
         <div class="auth-links">
           {% if user.is_authenticated %}
+
+          <a class="button ghost" href="{% url 'post_create' %}">Create</a>
+          <a class="button" href="{% url 'logout' %}">Logout</a>
+          <a
+            class="settings-link-simple"
+            href="{% url 'settings' %}"
+            aria-label="Appearance and profile settings"
+          >
+            ⚙️
+          </a>
           <a class="avatar" href="{% url 'profile' %}">
             {% if user_profile and user_profile.image %}
             <img
@@ -81,8 +123,7 @@
             <span>{{ user.username|first|upper }}</span>
             {% endif %}
           </a>
-          <a class="button ghost" href="{% url 'post_create' %}">Create</a>
-          <a class="button" href="{% url 'logout' %}">Logout</a>
+
           {% else %}
           <a class="button ghost" href="{% url 'login' %}">Login</a>
           <a class="button" href="{% url 'register' %}">Sign Up</a>
@@ -104,33 +145,52 @@
     </footer>
 
     <script>
-      const savedTheme = window.localStorage.getItem("blogweb-theme");
-      const savedAccent = window.localStorage.getItem("blogweb-accent");
-      const root = document.documentElement;
-      if (savedTheme && savedTheme !== document.documentElement.dataset.theme) {
-        document.documentElement.dataset.theme = savedTheme;
+      document.documentElement.dataset.theme =
+        document.documentElement.dataset.theme || "light";
+      const accent = "{{ accent_color|default:'#ff4f70' }}";
+      if (accent) {
+        document.documentElement.style.setProperty("--accent-color", accent);
       }
-      if (savedAccent) {
-        root.style.setProperty("--accent-color", savedAccent);
-      }
-      document
-        .querySelectorAll('.theme-switcher button[name="theme"]')
-        .forEach((button) => {
-          button.addEventListener("click", () => {
-            window.localStorage.setItem("blogweb-theme", button.value);
-            setTimeout(() => {
-              document.documentElement.dataset.theme = button.value;
-            }, 0);
+      document.querySelectorAll("[data-share-profile]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const url = button.getAttribute("data-share-profile");
+          if (navigator.share) {
+            navigator.share({ url }).catch(() => {
+              if (navigator.clipboard) {
+                navigator.clipboard.writeText(url);
+              }
+            });
+          } else if (navigator.clipboard) {
+            navigator.clipboard.writeText(url);
+          }
+          button.classList.add("shared");
+          setTimeout(() => button.classList.remove("shared"), 1500);
+        });
+      });
+      document.querySelectorAll("[data-subscribe-toggle]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const active = button.classList.toggle("is-active");
+          button.textContent = active ? "Subscribed" : "Subscribe";
+          button.setAttribute("aria-pressed", active ? "true" : "false");
+        });
+      });
+      document.querySelectorAll(".theme-option input").forEach((input) => {
+        input.addEventListener("change", () => {
+          document.querySelectorAll(".theme-option").forEach((option) => {
+            option.classList.toggle(
+              "is-active",
+              option.contains(input) && input.checked
+            );
           });
         });
-      const colorInput = document.querySelector(
-        '.theme-custom input[type="color"]'
-      );
-      if (colorInput) {
-        colorInput.addEventListener("input", (event) => {
-          const color = event.target.value;
-          root.style.setProperty("--accent-color", color);
-          window.localStorage.setItem("blogweb-accent", color);
+      });
+      const accentPicker = document.querySelector("#accent-color");
+      if (accentPicker) {
+        accentPicker.addEventListener("input", (event) => {
+          document.documentElement.style.setProperty(
+            "--accent-color",
+            event.target.value
+          );
         });
       }
     </script>

@@ -1,14 +1,17 @@
 from django.contrib import messages
+from django.db.models import Prefetch
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
-from django.db.models import Prefetch
+from .forms import CommentForm, PostForm, StoryForm
+from .models import Comment, Post, Story
+from django.utils import timezone
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import get_user_model
 
-from .forms import CommentForm, PostForm
-from .models import Comment, Post
-
+User = get_user_model()
 
 def _theme_context(request: HttpRequest) -> dict:
     return {
@@ -17,7 +20,7 @@ def _theme_context(request: HttpRequest) -> dict:
         "user_profile": getattr(request.user, "profile", None) if request.user.is_authenticated else None,
     }
 
-
+# --- THIS FUNCTION IS UPDATED ---
 def post_list(request: HttpRequest) -> HttpResponse:
     posts = list(
         Post.objects.select_related("author", "author__profile")
@@ -31,10 +34,41 @@ def post_list(request: HttpRequest) -> HttpResponse:
     for post in posts:
         post.user_liked = post.is_liked_by(request.user)
         post.user_saved = post.is_saved_by(request.user)
+        
+    # --- UPDATED STORY LOGIC ---
+    final_stories = [] # Start with an empty list
+    
+    if request.user.is_authenticated:
+        # 1. Get the Profiles of users the current user is following.
+        #    (Assumes related_name='following' on your Profile's followers field)
+        try:
+            my_followed_profiles = request.user.following.all()
+            
+            # 2. Get the user IDs from those profiles
+            followed_user_ids = my_followed_profiles.values_list('user__id', flat=True)
+
+            # 3. Get active stories *only* from those users
+            active_stories = Story.objects.filter(
+                expires_at__gt=timezone.now(),
+                author__id__in=followed_user_ids
+            ).select_related('author', 'author__profile')
+            
+            # 4. Get just the latest story for each user
+            stories_by_user = {}
+            for story in active_stories:
+                if story.author.id not in stories_by_user:
+                    stories_by_user[story.author.id] = story
+            final_stories = list(stories_by_user.values())
+        except AttributeError:
+            # Fails gracefully if the 'following' relationship isn't set up
+            # (e.g., accounts/models.py Profile model is wrong)
+            final_stories = [] 
+    # --- END UPDATED LOGIC ---
 
     context = {
         "posts": posts,
         "comment_form": CommentForm(),
+        "stories": final_stories,  # This is now the *filtered* list
     }
     context.update(_theme_context(request))
     return render(request, "blog/post_list.html", context)
@@ -75,6 +109,42 @@ def create_post(request: HttpRequest) -> HttpResponse:
     context = {"form": form}
     context.update(_theme_context(request))
     return render(request, "blog/post_form.html", context)
+
+@login_required
+def create_story(request: HttpRequest) -> HttpResponse:
+    if request.method == "POST":
+        form = StoryForm(request.POST, request.FILES)
+        if form.is_valid():
+            story = form.save(commit=False)
+            story.author = request.user
+            story.save()
+            messages.success(request, "Your story is live for 24 hours!")
+            return redirect("post_list") # Go back home
+    else:
+        form = StoryForm()
+
+    context = {"form": form}
+    context.update(_theme_context(request))
+    return render(request, "blog/story_form.html", context)
+
+def story_view(request: HttpRequest, username: str) -> HttpResponse:
+    story_user = get_object_or_404(User, username=username)
+    
+    active_stories = Story.objects.filter(
+        author=story_user,
+        expires_at__gt=timezone.now()
+    ).select_related('author', 'author__profile')
+
+    if not active_stories:
+        messages.info(request, f"{username} has no active stories.")
+        return redirect("post_list")
+
+    context = {
+        "story_user": story_user,
+        "stories": active_stories,
+    }
+    context.update(_theme_context(request))
+    return render(request, "blog/story_detail.html", context)
 
 
 @login_required
@@ -118,8 +188,6 @@ def add_comment(request: HttpRequest, pk: int) -> HttpResponse:
 
 
 def register(request: HttpRequest) -> HttpResponse:
-    from django.contrib.auth.forms import UserCreationForm
-
     if request.method == "POST":
         form = UserCreationForm(request.POST)
         if form.is_valid():
@@ -133,3 +201,25 @@ def register(request: HttpRequest) -> HttpResponse:
     context = {"form": form}
     context.update(_theme_context(request))
     return render(request, "registration/register.html", context)
+
+@login_required
+@require_POST
+def set_theme(request: HttpRequest) -> HttpResponse:
+    theme = request.POST.get("theme", "light")
+    accent_color = request.POST.get("accent_color") or request.session.get("accent_color", "#ff4f70")
+
+    if not isinstance(accent_color, str) or not accent_color.startswith("#"):
+        accent_color = "#ff4f70"
+    if len(accent_color) not in {4, 7}:
+        accent_color = "#ff4f70"
+
+    if theme not in {"light", "dark", "custom"}:
+        theme = "light"
+
+    request.session["theme"] = theme
+    request.session["accent_color"] = accent_color
+
+    messages.success(request, "Your appearance preferences have been updated.")
+
+    next_url = request.POST.get("next") or request.META.get("HTTP_REFERER") or reverse("settings")
+    return redirect(next_url)

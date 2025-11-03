@@ -1,7 +1,7 @@
 from django import forms
 from taggit.forms import TagWidget
 
-from .models import Comment, Post
+from .models import Comment, Post, Story  # <-- ADDED Story
 
 
 class PostForm(forms.ModelForm):
@@ -30,3 +30,12 @@ class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
         fields = ['body']
+
+# --- NEW STORY FORM ---
+class StoryForm(forms.ModelForm):
+    class Meta:
+        model = Story
+        fields = ['image']
+        widgets = {
+            'image': forms.FileInput(attrs={'class': 'form-control'}),
+        }

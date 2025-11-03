@@ -1,21 +1,184 @@
 {% extends 'blog/base.html' %}
-{% block title %}Log in • Blogweb{% endblock %}
+{% load static %}
+
+{% block title %}Log In • Blogweb{% endblock %}
 
 {% block content %}
-<section class="form-card">
-  <h1>Welcome back</h1>
-  <form method="post" class="stack">
-    {% csrf_token %}
-    {{ form.non_field_errors }}
-    {% for field in form %}
-    <div class="form-group">
-      {{ field.label_tag }}
-      {{ field }}
-      {% if field.errors %}<p class="error">{{ field.errors|striptags }}</p>{% endif %}
+
+<style>
+  .login-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 80vh;
+    padding: 2rem;
+    background-color: var(--body-bg, #f8f9fa);
+  }
+
+  .login-wrapper {
+    display: flex;
+    width: 100%;
+    max-width: 900px; /* Increased width for two columns */
+    background: var(--card-bg, #ffffff);
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+  }
+
+  /* --- YOUR NEW "OC" SECTION --- */
+  .login-oc-section {
+    flex: 1;
+    /* Remove padding to let the image fill the space */
+    padding: 0; 
+    /* Center the image, just in case */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f9f6f3;
+    border-right: 1px solid #e0e0e0;
+  }
+  
+  .login-oc-section img {
+    width: 100%;
+    height: 100%;
+    /* This makes the image cover the whole area without stretching */
+    object-fit: cover; 
+  }
+  /* --- END "OC" SECTION --- */
+
+
+  .login-form-section {
+    flex: 1;
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .login-form-section h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    color: var(--text-color, #212529);
+  }
+
+  .login-form label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 0.5rem;
+  }
+
+  .login-form input[type="text"],
+  .login-form input[type="password"] {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: var(--input-bg, #f1f3f5);
+  }
+
+  /* --- CINE-SYNDICATE BROWN --- */
+  .login-form input[type="text"]:focus,
+  .login-form input[type="password"]:focus {
+    outline: none;
+    border-color: #6d4c41; /* Brown focus color */
+    box-shadow: 0 0 5px rgba(109, 76, 65, 0.3);
+  }
+
+  .login-form .login-button {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    background-color: #4b3621; /* Dark brown from your design */
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 1.5rem;
+    transition: background-color 0.2s ease;
+  }
+  
+  .login-form .login-button:hover {
+    background-color: #3a2a1a;
+  }
+
+  .login-form-section .signup-link {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+  }
+
+  .login-form-section .signup-link a {
+    color: #6d4c41; /* Brown link color */
+    font-weight: 600;
+    text-decoration: none;
+  }
+  
+  .login-form-section .signup-link a:hover {
+    text-decoration: underline;
+  }
+
+  /* This is Django's error list */
+  .form-errors {
+    background: #fde8e8;
+    color: #a94442;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+  }
+  
+  /* Hide the "OC" section on small screens */
+  @media (max-width: 768px) {
+    .login-oc-section {
+      display: none;
+    }
+    .login-form-section {
+      padding: 2rem;
+    }
+  }
+
+</style>
+
+
+<div class="login-container">
+  <div class="login-wrapper">
+
+    <div class="login-oc-section">
+   <img src="{% static 'images/login_graphic.png' %}" alt="Login Graphic"> </div>
+    <div class="login-form-section">
+      <h1>Welcome back</h1>
+
+      {% if form.errors %}
+        <div class="form-errors">
+          <p>Your username and password didn't match. Please try again.</p>
+        </div>
+      {% endif %}
+
+      <form class="login-form" method="post">
+        {% csrf_token %}
+        
+        <p>
+          <label for="id_username">Username:</label>
+          {{ form.username }}
+        </p>
+
+        <p style="margin-top: 1rem;">
+          <label for="id_password">Password:</label>
+          {{ form.password }}
+        </p>
+        
+        <button type="submit" class="login-button">Log in</button>
+      </form>
+
+      <p class="signup-link">
+        New here? <a href="{% url 'register' %}">Create an account.</a>
+      </p>
+
     </div>
-    {% endfor %}
-    <button type="submit" class="button">Log in</button>
-  </form>
-  <p class="muted">New here? <a href="{% url 'register' %}">Create an account</a>.</p>
-</section>
+    </div>
+</div>
 {% endblock %}

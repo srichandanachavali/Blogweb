@@ -1,0 +1,55 @@
+/* CSS Variables for Theme Switching */
+:root, html.theme-rose body {
+    --background-gradient: linear-gradient(135deg, #FFDAC0, #FB9EC4, #8865FF);
+    --container-bg: white;
+    --text-color: #333;
+    --header-color: #333;
+    --section-bg: #f8f9fa;
+    --link-color: #8865FF;
+    --white-text: white;
+    /* ... other variables ... */
+}
+html.theme-dark body {
+    --background-gradient: linear-gradient(135deg, #2c3e50, #2c3e50);
+    --container-bg: #36393f;
+    --text-color: #dcddde;
+    --header-color: white;
+    --section-bg: #2f3136;
+    --link-color: #7289da;
+}
+/* ... light and blue theme variables ... */
+
+/* General Body & Layout */
+body { font-family: sans-serif; background: var(--background-gradient); background-attachment: fixed; margin: 0; padding: 20px; color: var(--text-color); box-sizing: border-box; }
+.container { background-color: var(--container-bg); color: var(--text-color); border-radius: 12px; box-shadow: 0 4px 25px rgba(0,0,0,0.1); width: 100%; max-width: 800px; padding: 40px; margin: 40px auto; box-sizing: border-box; }
+header { text-align: center; color: var(--white-text); padding: 20px 0; }
+/* ... other header/search styles ... */
+
+/* --- POST GALLERY STYLES --- */
+.post-gallery {
+    column-count: 3;
+    column-gap: 20px;
+    max-width: 1200px;
+    margin: 30px auto 0 auto;
+}
+.post-card {
+    background-color: var(--container-bg);
+    color: var(--text-color);
+    display: inline-block;
+    width: 100%;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    break-inside: avoid;
+}
+.post-card img {
+    width: 100%;
+    height: auto; /* THIS LETS THE IMAGE SHOW ITS FULL HEIGHT */
+    display: block;
+}
+.post-card-content { padding: 15px; }
+.post-card h2 a { text-decoration: none; color: var(--header-color); }
+.post-card-meta a { color: var(--link-color); text-decoration: none; font-weight: bold; }
+
+/* ... Styles for Pagination, Dashboard, Settings, etc. ... */
