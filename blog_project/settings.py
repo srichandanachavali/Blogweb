@@ -1,8 +1,9 @@
 from pathlib import Path
 import os
-
-CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL=cloudinary://<775756982884312>:<ZGH-AlJahFdl93nhy3nvPTLqF60>@dzrpirc8z')
 import dj_database_url
+
+# This is the correct line. It reads the key from Render's Environment.
+CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL') 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -33,10 +34,10 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'whitenoise.runserver_nostatic',
+    'whitenoise.runserver_nostatic', # For Whitenoise
     'django.contrib.staticfiles',
-    'cloudinary',                 # <-- ADD THIS FOR MEDIA FILES
-    'cloudinary_storage',         # <-- ADD THIS FOR MEDIA FILES
+    'cloudinary',           # For Cloudinary
+    'cloudinary_storage',   # For Cloudinary
     'taggit',
     'blog',
     'accounts',
@@ -84,7 +85,6 @@ DATABASES = {
 
 
 # Password validation
-# (Assuming your validators are here)
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -116,12 +116,8 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
 # --- MEDIA FILES Configuration (with Cloudinary) ---
-# This block replaces your old MEDIA_URL and MEDIA_ROOT
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
-    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
-    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
-}
+# This is the *only* line you need besides the import at the top.
+# It tells Django to use Cloudinary for all uploaded files.
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 
