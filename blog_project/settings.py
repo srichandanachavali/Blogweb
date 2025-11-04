@@ -1,51 +1,46 @@
 from pathlib import Path
 import os
 import dj_database_url
+from dotenv import load_dotenv
 
-# This is the correct line. It reads the key from Render's Environment.
-CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL') 
+load_dotenv()
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# --- SECRET_KEY Configuration ---
-SECRET_KEY = os.environ.get(
-    'SECRET_KEY', 
-    'django-insecure-this-is-a-backup-key-for-local-dev-only'
-)
-
-# --- DEBUG Configuration ---
+# --- SECURITY ---
+SECRET_KEY = os.environ.get('SECRET_KEY', 'fallback-secret-key')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-
-# --- HOSTS Configuration ---
-ALLOWED_HOSTS = ['127.0.0.1']
-
+# --- HOSTS ---
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
-
-# Application definition
+# --- INSTALLED APPS ---
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'whitenoise.runserver_nostatic', # For Whitenoise
+    'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
-    'cloudinary',           # For Cloudinary
-    'cloudinary_storage',   # For Cloudinary
+
+    # Third-party
+    'cloudinary',
+    'cloudinary_storage',
     'taggit',
+
+    # Local apps
     'blog',
     'accounts',
 ]
 
+# --- MIDDLEWARE ---
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # <-- For Static Files
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -56,10 +51,11 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'blog_project.urls'
 
+# --- TEMPLATES ---
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -74,57 +70,47 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'blog_project.wsgi.application'
 
-
-# --- DATABASE Configuration (for Render) ---
+# --- DATABASES ---
 DATABASES = {
     'default': dj_database_url.config(
-        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
+        default=os.environ.get('DATABASE_URL'),
         conn_max_age=600
     )
 }
 
-
-# Password validation
+# --- PASSWORD VALIDATORS ---
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-
-# Internationalization
+# --- LANGUAGE/TIMEZONE ---
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-
-# --- STATIC FILES Configuration (with Whitenoise) ---
-STATIC_URL = 'static/'
+# --- STATIC FILES ---
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-
-# --- MEDIA FILES Configuration (with Cloudinary) ---
-# This is the *only* line you need besides the import at the top.
-# It tells Django to use Cloudinary for all uploaded files.
+# --- MEDIA / CLOUDINARY ---
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
+}
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-
-# --- Other Settings ---
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# --- AUTH ---
 LOGIN_REDIRECT_URL = 'post_list'
 LOGOUT_REDIRECT_URL = 'post_list'
 LOGIN_URL = 'login'
 
+# --- OTHER ---
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 TAGGIT_CASE_INSENSITIVE = True
