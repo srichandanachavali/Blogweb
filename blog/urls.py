@@ -1,19 +1,26 @@
 from django.urls import path
-
 from . import views
+
+# --- IMPORT THE NEW VIEWS ---
+from .views import PostUpdateView, PostDeleteView
 
 urlpatterns = [
     path('', views.post_list, name='post_list'),
     path('post/new/', views.create_post, name='post_create'),
     path('story/create/', views.create_story, name='story_create'),
     
-    # --- ADD THIS NEW LINE ---
     path('story/<str:username>/', views.story_view, name='story_view'),
     
     path('post/<int:pk>/', views.post_detail, name='post_detail'),
     path('post/<int:pk>/like/', views.toggle_like, name='post_toggle_like'),
     path('post/<int:pk>/save/', views.toggle_save, name='post_toggle_save'),
     path('post/<int:pk>/comment/', views.add_comment, name='post_add_comment'),
+    
+    # --- ADD THESE TWO LINES ---
+    path('post/<int:pk>/update/', PostUpdateView.as_view(), name='post_update'),
+    path('post/<int:pk>/delete/', PostDeleteView.as_view(), name='post_delete'),
+    # ---------------------------
+    
     path('theme/', views.set_theme, name='set_theme'),
     path('register/', views.register, name='register'),
 ]

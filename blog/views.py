@@ -3,13 +3,17 @@ from django.db.models import Prefetch
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy  # <-- IMPORT REVERSE_LAZY
 from django.views.decorators.http import require_POST
 from .forms import CommentForm, PostForm, StoryForm
 from .models import Comment, Post, Story
 from django.utils import timezone
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model
+# --- IMPORTS FOR UPDATE/DELETE ---
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.views.generic import UpdateView, DeleteView
+
 
 User = get_user_model()
 
@@ -223,3 +227,41 @@ def set_theme(request: HttpRequest) -> HttpResponse:
 
     next_url = request.POST.get("next") or request.META.get("HTTP_REFERER") or reverse("settings")
     return redirect(next_url)
+
+# -----------------------------------------------
+# --- ADD THESE NEW CLASSES FOR UPDATE & DELETE ---
+# -----------------------------------------------
+
+class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Post
+    # These are the fields the user can edit
+    fields = ['title', 'body', 'image', 'video', 'tags']
+    template_name = 'blog/post_form.html' # We will create this template
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
+
+    def test_func(self):
+        # Get the post we're trying to update
+        post = self.get_object()
+        # Check if the current logged-in user is the author
+        return self.request.user == post.author
+    
+    def get_success_url(self):
+        # Redirect back to the post's detail page after updating
+        return reverse_lazy('post_detail', kwargs={'pk': self.object.pk})
+
+
+class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Post
+    template_name = 'blog/post_confirm_delete.html' # We will create this
+    
+    # URL to redirect to after a successful deletion
+    success_url = reverse_lazy('post_list') 
+
+    def test_func(self):
+        # Get the post we're trying to delete
+        post = self.get_object()
+        # Check if the current logged-in user is the author
+        return self.request.user == post.author

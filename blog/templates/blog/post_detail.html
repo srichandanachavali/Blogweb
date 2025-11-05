@@ -29,7 +29,14 @@
         </a>
         <p class="post-author-handle">@{{ post.author.username }}</p>
       </div>
-    </div>
+
+      {% if request.user == post.author %}
+      <div class="post-actions" style="margin-left: auto; display: flex; gap: 0.5rem;">
+          <a href="{% url 'post_update' post.pk %}" class="button ghost">Edit</a>
+          <a href="{% url 'post_delete' post.pk %}" class="button" style="background: #dc3545; color: white;">Delete</a>
+      </div>
+      {% endif %}
+      </div>
 
     <h1>{{ post.title }}</h1>
 
@@ -44,7 +51,6 @@
 
   {% if post.image %}
   <div class="post-card__media">
-    <!-- ✅ Use .url directly for Cloudinary -->
     <img
       src="{{ post.image.url }}"
       alt="{{ post.title }}"
@@ -148,11 +154,13 @@
 </article>
 
 <style>
+  /* This ensures the author simple div can hold the buttons */
   .post-author-simple {
     display: flex;
     align-items: center;
     gap: 12px;
     margin-bottom: 16px;
+    width: 100%; /* Make it full width */
   }
 
   .post-author-avatar {
