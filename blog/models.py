@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from datetime import timedelta
 from taggit.managers import TaggableManager
+from cloudinary.models import CloudinaryField  # <-- Import CloudinaryField
 
 User = get_user_model()
 
@@ -16,8 +17,23 @@ class Post(models.Model):
     )
     title = models.CharField(max_length=250)
     body = models.TextField()
-    image = models.ImageField(upload_to='posts/images/', blank=True, null=True)
-    video = models.FileField(upload_to='posts/videos/', blank=True, null=True)
+    
+    # --- UPDATED FIELDS ---
+    image = CloudinaryField(
+        'image',
+        folder='posts/images',  # <-- Tells Cloudinary to use this folder
+        blank=True,
+        null=True
+    )
+    video = CloudinaryField(
+        'video',
+        resource_type='video',  # <-- Specify resource type for videos
+        folder='posts/videos',  # <-- Tells Cloudinary to use this folder
+        blank=True,
+        null=True
+    )
+    # --- END UPDATED FIELDS ---
+    
     publish = models.DateTimeField(default=timezone.now)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -86,7 +102,14 @@ class Story(models.Model):
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='stories'
     )
-    image = models.ImageField(upload_to='stories/images/')
+    
+    # --- UPDATED FIELD ---
+    image = CloudinaryField(
+        'image',
+        folder='stories/images'  # <-- Tells Cloudinary to use this folder
+    )
+    # --- END UPDATED FIELD ---
+    
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
 

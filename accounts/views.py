@@ -58,6 +58,7 @@ def settings_view(request):
     context.update(_theme_context(request))
     return render(request, 'accounts/settings.html', context)
 
+# In accounts/views.py
 
 @login_required
 def profile_view(request):
@@ -69,20 +70,22 @@ def profile_view(request):
         .order_by('-publish')
     )
     liked_posts = request.user.liked_posts.select_related('author', 'author__profile').order_by('-publish')
-    saved_posts = request.user.bookmarked_posts.select_related('author', 'author__profile').order_by('-publish')
+    
+    # This is the line you just fixed
+    saved_posts = request.user.saved_posts.select_related('author', 'author__profile').order_by('-publish')
+
+    # THIS IS YOUR ERROR LINE (line 74)
+    # Make sure it is NOT indented extra. It must align perfectly
+    # with 'saved_posts', 'liked_posts', and 'my_posts'.
     user_comments = Comment.objects.filter(user=request.user).select_related('post').order_by('-created')
 
     context = {
         'profile': profile,
         'my_posts': my_posts,
-        'liked_posts': liked_posts,
-        'saved_posts': saved_posts,
-        'user_comments': user_comments,
+        # ... etc ...
     }
     context.update(_theme_context(request))
     return render(request, 'accounts/profile.html', context)
-
-
 def logout_view(request):
     logout(request)
     messages.info(request, "You have successfully logged out.")
