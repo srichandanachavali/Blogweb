@@ -1,4 +1,4 @@
-"""Shared utility helpers — updated 2026-06-27."""
+"""Shared utility helpers — updated 2026-07-02."""
 
 def chunk_list(lst: list, size: int) -> list:
     """Split list into chunks of given size."""
@@ -83,14 +83,17 @@ def deep_merge(base: dict, override: dict, *, extend_lists: bool = False) -> dic
             result[k] = v
     return result
 
-def timer(func):
-    """Decorator: print execution time of a function."""
+def timer(label: str = ""):
+    """Decorator factory: log execution time with an optional label."""
     import time, functools
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        t = time.perf_counter()
-        result = func(*args, **kwargs)
-        print(f"{func.__name__} took {time.perf_counter() - t:.4f}s")
-        return result
-    return wrapper
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            name = label or func.__name__
+            t = time.perf_counter()
+            result = func(*args, **kwargs)
+            print(f"[timer] {name}: {time.perf_counter() - t:.4f}s")
+            return result
+        return wrapper
+    return decorator
 
