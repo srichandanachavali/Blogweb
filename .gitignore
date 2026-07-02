@@ -8,3 +8,7 @@ db.sqlite3*
 .vscode/
 daily_log.md
 *.log
+__pycache__/
+*.pyo
+.venv/
+.env.local
